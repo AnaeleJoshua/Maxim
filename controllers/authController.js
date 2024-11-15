@@ -1,7 +1,18 @@
+const fs = require('fs').promises
+
 const userDB = {
-    users: require('../model/users.json'),
+    // users: require('../model/users.json'), //model\users.json
     setUser: function(data){
         this.users = data
+    },
+    users: async ()=>{
+        try{
+            const rawData = await fs.readFile(path.join(__dirname,'../','model','users.json'),'utf-8')
+        
+            return  JSON.parse(rawData)
+        }catch(err){
+            console.error('error reading the file',err)
+        }
     }
 }
 const jwt = require('jsonwebtoken');
@@ -15,10 +26,14 @@ const handleLogin = async (req,res)=>{
     if(!user || !pwd) return res.status(400).json({
         'message': 'username and passwordare required'
     })
-    const foundUser=userDB.users.find(person=>person.username === user)
+    // console.log(fs.access(path.join(__dirname,'../','model','users.json')))
+    console.log(await userDB.users())
+    let foundUser= await userDB.users()
+    foundUser = foundUser.find(person=>person.username === user)
     if (!foundUser)return res.sendStatus(401);
     //evaluate password
     const match = await bcrypt.compare(pwd,foundUser.password);
+    console.log(match)
     if(match){
         //create a jwts
         const accessToken = jwt.sign(
@@ -41,12 +56,3 @@ const handleLogin = async (req,res)=>{
     }
 }
 module.exports= {handleLogin}
-
-//extract user login details
-//confirm existence of validated payload details
-//ensure user exist
-//compare password with hashed password
-// create jwt access token
-//create jwt refresh token
-// set cookie with refresh toke, http only
-//return access token
