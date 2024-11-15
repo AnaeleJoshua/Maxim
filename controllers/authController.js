@@ -27,9 +27,9 @@ const handleLogin = async (req,res)=>{
         'message': 'username and passwordare required'
     })
     // console.log(fs.access(path.join(__dirname,'../','model','users.json')))
-    console.log(await userDB.users())
-    let foundUser= await userDB.users()
-    foundUser = foundUser.find(person=>person.username === user)
+
+    const allUser= await userDB.users()
+    foundUser = allUser.find(person=>person.username === user)
     if (!foundUser)return res.sendStatus(401);
     //evaluate password
     const match = await bcrypt.compare(pwd,foundUser.password);
@@ -43,7 +43,7 @@ const handleLogin = async (req,res)=>{
             {"username":foundUser.username},process.env.REFRESH_TOKEN_SECRET,{expiresIn:'1d'}
         )
         //saving refreshToken with current user
-        const otherUsers = userDB.users.filter(person=>person !== foundUser.username)
+        const otherUsers = allUser.filter(person=>person !== foundUser.username)
         const currentUser = {...foundUser,refreshToken}
         userDB.setUser([...otherUsers,currentUser])
         await fsPromises.writeFile(
